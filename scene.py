@@ -14,10 +14,169 @@ from manim import *
 from PlotScene import *
 from common import *
 
+class EuclideanDistanceDemo(Scene):
+    def construct(self):
+        v1 = Matrix([['a'],['b']])
+        v2 = Matrix([['c'],['d']])
+        vecs = Group(v1,v2).arrange()
+        self.play(FadeIn(vecs))
+        self.wait(1)
+
+        v3 = MathTex('(a,b)').move_to(v1)
+        v4 = MathTex('(c,d)').move_to(v2)
+        vecs = Group(v3,v4).arrange()
+        self.play(
+                FadeOut(v1,shift=UP),
+                FadeIn(v3,shift=UP),
+                FadeOut(v2,shift=UP),
+                FadeIn(v4,shift=UP)
+            )
+        self.wait(0.5)
+
+        dot = Dot([-2, -1, 0]).set_color(LOT_COLOR).set_z_index(1)
+        dot2 = Dot([2, 2, 0]).set_color(THOUGHT_COLOR).set_z_index(1)
+        line = Line(dot.get_center(), dot2.get_center())
+        self.play(
+                Create(dot),
+                Create(dot2),
+                v3.animate.next_to(dot,LEFT),
+                v4.animate.next_to(dot2,RIGHT,buff=0.5)
+            )
+        self.play(Create(line))
+        self.wait(0.5)
+        v3.add_updater(
+                lambda mobj: mobj.next_to(dot,LEFT)
+            )
+        v4.add_updater(
+                lambda mobj: mobj.next_to(dot2,RIGHT,buff=0.5)
+            )
+        invisible_dot = Dot([2,-1,0], fill_opacity=0)
+        w = DashedLine(dot.get_center(),[2,-1,0])
+        h = DashedLine(dot2.get_center(),[2,-1,0])
+        self.play(Create(h),Create(w))
+        v5 = MathTex('(c,b)').next_to([2,-1,0],DR)
+        self.play(FadeIn(v5))
+        self.wait(0.5)
+        b1 = Brace(w)
+        b1_lab = b1.get_tex('c-a')
+        b2 = BraceBetweenPoints(
+                dot2.get_center(),
+                [2,-1,0],
+                direction=RIGHT
+            )
+        b2_lab = b2.get_tex('d-b').add_updater(
+                lambda mobj: mobj.next_to(b2.get_tip(),RIGHT)
+            )
+
+        self.play(
+                FadeIn(b1),
+                FadeIn(b2),
+                Write(b1_lab),
+                Write(b2_lab)
+            )
+        self.wait(1)
+        triangle = VGroup(line,h,w,dot,dot2,invisible_dot)
+        braces = VGroup(b1,b2)
+        tri_and_brace = VGroup(triangle,braces)
+        self.play(
+                tri_and_brace.animate.rotate(-36.9*DEGREES),
+                v5.animate.next_to([0.85,-1.8,0],DOWN,buff=0.5),
+                b1_lab.animate.next_to([-1,-1,0],LEFT)
+            )
+        self.wait(1)
+        top_brace = BraceBetweenPoints(dot.get_center(),dot2.get_center(),direction=UP)
+        hyp_eq = top_brace.get_tex(
+                "dist = \sqrt{(",
+                "c - a",
+                ")^2 + (",
+                "d - b",
+                ")^2}"
+            )
+        self.play(FadeIn(top_brace),Write(hyp_eq))
+        self.wait(1)
+        v3.clear_updaters()
+        v4.clear_updaters()
+        b2_lab.clear_updaters()
+        braces.add(top_brace)
+        labels = VGroup(v3,v4,v5,b1_lab,b2_lab)
+        to_rm = VGroup(triangle,braces,labels)
+        vecs = VGroup(v1,v2)
+        self.play(
+                LaggedStart(
+                    FadeOut(to_rm, shift=RIGHT),
+                    FadeIn(vecs,shift=RIGHT),
+                    lag_ratio=1
+                )
+            )
+        self.wait(1)
+        v1_hat = MathTex("\hat{v}").move_to(v1)
+        v2_hat = MathTex("\hat{u}").move_to(v2)
+        self.play(ReplacementTransform(v1,v1_hat),ReplacementTransform(v2,v2_hat))
+        self.wait(1)
+        eq1 = MathTex("(","\hat{u}","-","\hat{v}",")^2")
+        eq2 = MathTex(
+                "dist = \sqrt{(",
+                "\hat{u}_1 - \hat{v}_1",
+                ")^2 + (",
+                "\hat{u}_2 - \hat{v}_2",
+                ")^2}"
+            ).move_to(hyp_eq)
+        v_hats = VGroup(v1_hat,v2_hat)
+        self.play(Swap(*v_hats))
+        self.play(TransformMatchingTex(v_hats,eq1),TransformMatchingTex(hyp_eq,eq2))
+        self.wait(1)
+        eq3 = MathTex(
+                "dist = \sqrt{\sum_{i=1}^{k}",
+                "(","\hat{u}","_i","-","\hat{v}","_i",")^2","}"
+            ).move_to(eq1)
+        eq4 = MathTex(
+                "dist = \sqrt{(",
+                "\hat{u}_1 - \hat{v}_1",
+                ")^2 + (",
+                "\hat{u}_2 - \hat{v}_2",
+                ")^2 + ... + (\hat{u}_k - \hat{v}_k)^2}"
+            ).move_to(hyp_eq)
+        self.play(
+                TransformMatchingTex(eq1,eq3),
+                TransformMatchingTex(eq2,eq4)
+            )
+        self.wait(2)
+        self.play(FadeOut(eq4,shift=UP),eq3.animate.move_to(ORIGIN))
+        self.wait(1)
+        self.euclidean_dist_eq = eq3
+
 class FormantTrackExample(PlotScene):
     def construct(self):
+        dtt = DiscreteTrigTransform()
+        dtt.construct()
         self.make_axes()
         self.plot_tracks()
+
+        self.add(dtt.vowel_label, dtt.vowel_vec)
+        dtt.vowel_label.add_updater(
+                lambda mobject: mobject.next_to(dtt.vowel_vec,LEFT)
+            )
+
+        v2_vec = Matrix([[3],[7],[5],[1],[9]]).next_to(
+            self.plots[1], 
+            DOWN,
+            buff=0.5
+        ).scale(0.7)
+        v2_label = MathTex("\hat{V}_{T}=").next_to(v2_vec,LEFT)
+        dot_anim = LaggedStart(
+                *[FadeIn(x,shift=DOWN) for x in self.dots]
+            )
+        self.play(
+                dtt.vowel_vec.animate.next_to(
+                    self.plots[0], 
+                    DOWN,
+                    buff=0.5
+                ).scale(0.7),
+                FadeIn(v2_vec),
+                FadeIn(v2_label),
+                FadeIn(self.plots),
+                dot_anim
+            )
 
     def plot_tracks(self):
         def plot_loop(ax, d, color):
@@ -40,7 +199,7 @@ class FormantTrackExample(PlotScene):
             dots.extend(plot_loop(self.ax1,d,LOT_COLOR))
         for d in caught_data:
             dots.extend(plot_loop(self.ax2,d,THOUGHT_COLOR))
-        self.add(*dots)
+        self.dots = dots
 
 
 
@@ -71,7 +230,7 @@ class FormantTrackExample(PlotScene):
                         "num_decimal_places":0
                     }
                 }
-            ).scale(0.5)
+            ).scale(0.5).align_on_border(UL)
         self.ax2 = self.setup_axes(
                 0., 
                 10., 
@@ -85,11 +244,10 @@ class FormantTrackExample(PlotScene):
                         "num_decimal_places":0
                     }
                 }
-            ).scale(0.5)
-        self.plots = Group(self.ax1,self.ax2).arrange(buff=1)
+            ).scale(0.5).align_on_border(UR)
         ax1_labels = self.label(self.ax1)
         ax2_labels = self.label(self.ax2)
-        self.add(self.plots,ax1_labels,ax2_labels)
+        self.plots = VGroup(self.ax1,self.ax2, ax1_labels, ax2_labels)
 
     def label(self, ax):
         x_label = ax.get_x_axis_label(
@@ -134,7 +292,7 @@ class DiscreteTrigTransform(PlotScene):
         f2_matrix = Matrix([[4],[2]]).next_to(f2_formula,DOWN)
         # Final vowel vector viz
         vowel_vec = Matrix([[-2],[3],[0],[4],[2]]).move_to(ORIGIN)
-        vowel_label = MathTex("\hat{V}=").next_to(vowel_vec,LEFT)
+        vowel_label = MathTex("\hat{V}_{L}=").next_to(vowel_vec,LEFT)
 
         rm = AnimationGroup(*[FadeOut(x) for x in old_mobjects],*[FadeOut(x) for x in self.plots])
         coeff_anim = []
@@ -178,6 +336,8 @@ class DiscreteTrigTransform(PlotScene):
                 FadeOut(f2_formula[0],shift=DOWN),
                 FadeIn(vowel_label)
             )
+        self.vowel_vec = vowel_vec
+        self.vowel_label = vowel_label
 
     def show_coeffs(self):
         c1 = make_coeff(1,self.ax1)

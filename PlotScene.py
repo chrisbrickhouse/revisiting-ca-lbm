@@ -11,6 +11,7 @@ import csv
 import math
 
 from manim import *
+from common import *
 
 
 def plot_sine(ax,f):
