@@ -8,6 +8,7 @@ Foobar is distributed in the hope that it will be useful, but WITHOUT ANY WARRAN
 You should have received a copy of the GNU General Public License along with Foobar. If not, see <https://www.gnu.org/licenses/>.
 """
 from manim import *
+from common import *
 
 class CircleIntro(Scene):
     def construct(self):
@@ -20,7 +21,14 @@ class CircleIntro(Scene):
         c_thought_og_center = c_thought.get_center()
 
         t_lot = Tex(LOT).next_to(c_lot, DOWN)
-        t_thought = Tex(THOUGHT).next_to(c_thought,DOWN)
+        t_thought = Tex(THOUGHT).next_to(c_thought,UP)
+
+        t_lot.add_updater(
+                lambda mobj: mobj.next_to(c_lot,DOWN)
+            )
+        t_thought.add_updater(
+                lambda mobj: mobj.next_to(c_thought,UP)
+            )
 
         self.play(Create(c_lot),Create(c_thought))
 
@@ -28,13 +36,12 @@ class CircleIntro(Scene):
 
         self.play(Write(t_lot), Write(t_thought))
 
-        self.play(Wait(run_time=3))
-
-        self.play(FadeOut(t_lot), FadeOut(t_thought))
+        self.wait(1)
 
         self.play(c_lot.animate.move_to(ORIGIN), c_thought.animate.move_to(ORIGIN))
 
-        self.play(Wait(run_time=3))
+        self.wait(1)
+
         c_lot.generate_target()
         c_lot.target.shift([-1.,0.,0.]).stretch_to_fit_width(0)
         c_thought.generate_target()
@@ -42,9 +49,10 @@ class CircleIntro(Scene):
 
         self.play(MoveToTarget(c_lot),MoveToTarget(c_thought))
         self.wait(1)
-        self.play(FadeOut(c_lot),FadeOut(c_thought))
+        rm = VGroup(c_lot,t_lot,c_thought,t_thought)
+        self.play(FadeOut(rm))
 
-        self.wait(0.5)
+        self.wait(1)
 
 
 class TitleSlide(Scene):
@@ -59,9 +67,6 @@ class TitleSlide(Scene):
         date = Tex(r"2 Sept 2022",font_size=32).next_to(email, DOWN)
 
 
-        self.play(Write(title))
-        self.play(Write(subtitle))
-        #self.play(Wait(run_time=1))
-        self.play(Write(author), Write(email), Write(date))
-        #self.play(Wait(run_time=10))
-        #self.play(FadeOut(title, subtitle, author, email, date))
+        self.play(LaggedStart(Write(title),Write(subtitle),Write(author), Write(email), Write(date)))
+        self.wait(2)
+        self.play(AnimationGroup(*[FadeOut(x) for x in [title, subtitle, author, email, date]]))
