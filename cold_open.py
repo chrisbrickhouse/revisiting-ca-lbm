@@ -30,17 +30,18 @@ class CircleIntro(Scene):
                 lambda mobj: mobj.next_to(c_thought,UP)
             )
 
+        self.wait(4)
         self.play(Create(c_lot),Create(c_thought))
 
-        self.wait(1)
+        self.wait(10)
 
         self.play(Write(t_lot), Write(t_thought))
 
-        self.wait(1)
+        self.wait(6)
 
         self.play(c_lot.animate.move_to(ORIGIN), c_thought.animate.move_to(ORIGIN))
 
-        self.wait(1)
+        self.wait(2)
 
         c_lot.generate_target()
         c_lot.target.shift([-1.,0.,0.]).stretch_to_fit_width(0)
@@ -68,5 +69,5 @@ class TitleSlide(Scene):
 
 
         self.play(LaggedStart(Write(title),Write(subtitle),Write(author), Write(email), Write(date)))
-        self.wait(2)
+        self.wait(14)
         self.play(AnimationGroup(*[FadeOut(x) for x in [title, subtitle, author, email, date]]))
